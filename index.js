@@ -17,7 +17,6 @@ const path = require("path");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
 const viewsPath = path.join(__dirname, "views");
 
 // ✅ Connect to MongoDB
@@ -118,6 +117,7 @@ app.use((err, req, res, next) => {
 });
 
 // ✅ Start the server
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
 });
