@@ -17,9 +17,10 @@ const path = require("path");
 require("dotenv").config();
 
 const app = express();
+const PORT = process.env.PORT || 4000;
 const viewsPath = path.join(__dirname, "views");
 
-// ✅ Connect to MongoDB
+// ✅ เชื่อมต่อ MongoDB
 connectDB()
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => {
@@ -27,40 +28,28 @@ connectDB()
     process.exit(1);
   });
 
-// ✅ Create HTTP server and initialize Socket.IO
+// ✅ สร้าง HTTP server และใช้ socket.io
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// ✅ Middleware to attach `io` to every request for use in routes
+// ✅ ส่ง `io` ให้ทุก request
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-const allowedOrigins = [
-  "https://website-bc4t.onrender.com",
-  "http://localhost:4000"
-];
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true
-  })
-);
-
-// ✅ Enable CORS and JSON parsing
+// ✅ ตั้งค่า CORS และ middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Serve static files
+// ✅ เสิร์ฟ static files
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ API routes
+// ✅ เส้นทาง API
 app.use("/api/auth", authRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/transactions", transactionRoutes);
@@ -70,7 +59,7 @@ app.use("/api/withdraw", withdrawRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/orders", ordersRoutes);
 
-// ✅ HTML view routes
+// ✅ เส้นทาง HTML
 app.get("/", (req, res) => res.sendFile(path.join(viewsPath, "index.html")));
 app.get("/index.html", (req, res) => res.sendFile(path.join(viewsPath, "index.html")));
 app.get("/wallet", (req, res) => res.sendFile(path.join(viewsPath, "wallet.html")));
@@ -83,15 +72,15 @@ app.get("/transaction-history", (req, res) => res.sendFile(path.join(viewsPath, 
 app.get("/personal-info", (req, res) => res.sendFile(path.join(viewsPath, "personal-info.html")));
 app.get("/admin-dashboard", (req, res) => res.sendFile(path.join(viewsPath, "admin-dashboard.html")));
 
-// ✅ Test API route
+// ✅ ทดสอบ API
 app.get("/api/kyc/test", (req, res) => {
   res.json({ message: "✅ KYC API is working!" });
 });
 
-// ✅ Socket.IO connection and event handlers
+// ✅ socket events
 io.on("connection", (socket) => {
   console.log("✅ Client connected to WebSocket!");
-  // Listen for withdraw-related events from clients and broadcast updates
+
   socket.on("withdrawRequest", () => io.emit("refreshWithdraws"));
   socket.on("withdrawApproved", () => io.emit("refreshWithdraws"));
   socket.on("withdrawRejected", () => io.emit("refreshWithdraws"));
@@ -102,7 +91,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ 404 handler for unknown routes
+// ✅ จัดการ 404
 app.use((req, res, next) => {
   if (req.path.endsWith(".html")) {
     return res.status(404).sendFile(path.join(viewsPath, "index.html"));
@@ -110,14 +99,13 @@ app.use((req, res, next) => {
   res.status(404).json({ message: "❌ API endpoint not found" });
 });
 
-// ✅ Global error handler
+// ✅ จัดการ error รวม
 app.use((err, req, res, next) => {
   console.error("🔥 ERROR:", err.message);
   res.status(500).json({ message: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์!" });
 });
 
-// ✅ Start the server
-const PORT = process.env.PORT || 4000;
+// ✅ เริ่มเซิร์ฟเวอร์
 server.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

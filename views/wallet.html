@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif !important;
+    }
+  </style>
+  <title>Assets room</title>
+  <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+  </script>
+  <script defer src="/js/shared.js"></script>
+  <script defer src="/js/wallet.js"></script>
+</head>
+<body class="bg-[#111728] text-white font-sans p-4 pb-24">
+  <div class="flex justify-end space-x-4 mt-4">
+    <a href="/deposit" class="border-2 border-orange-500 text-orange-500 py-2 px-6 rounded-lg hover:bg-orange-500 hover:text-white">ฝากเงิน</a>
+    <a href="/withdraw" class="border-2 border-orange-500 text-orange-500 py-2 px-6 rounded-lg hover:bg-orange-500 hover:text-white">ถอนเงิน</a>
+  </div>
+
+  <div class="mt-8 ml-2">
+    <p class="text-gray-400">ยอดคงเหลือ</p>
+    <p id="balance" class="text-2xl font-bold">USDT: --</p>
+    <p class="text-2xl font-bold mt-6">เทรดของฉัน</p>
+  </div>
+
+  <div class="flex space-x-4 mt-6 ml-2">
+    <button id="btn-active-orders" class="bg-gray-700 text-white py-2 px-6 rounded-full hover:bg-gray-600">ดำเนินอยู่</button>
+    <button id="btn-closed-orders" class="bg-gray-700 text-white py-2 px-6 rounded-full hover:bg-gray-600">ปิดแล้ว</button>
+  </div>
+
+  <div id="order-list" class="mt-4 ml-2 space-y-4"></div>
+
+  <div class="fixed bottom-0 left-0 w-full bg-gray-900 border-t border-gray-700 flex justify-between px-8 py-3 text-white text-xl">
+    <a href="/binary-trade-v2"><i class="fas fa-chart-line"></i></a>
+    <a href="/wallet"><i class="fas fa-wallet text-orange-400"></i></a>
+    <a href="/profile"><i class="fas fa-user"></i></a>
+  </div>
+
+  <!-- Modal แสดงข้อมูลออเดอร์ที่ปิดแล้ว -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 hidden justify-center items-center z-50">
+    <div class="bg-[#1e293b] text-white p-6 rounded-lg w-full max-w-md relative">
+      <button onclick="closeModal()" class="absolute top-2 right-4 text-2xl">&times;</button>
+      <h2 class="text-lg font-bold mb-4">รายละเอียดออเดอร์</h2>
+      <div id="modal-content" class="space-y-2 text-sm"></div>
+    </div>
+  </div>
+</body>
+</html>
