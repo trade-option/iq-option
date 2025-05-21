@@ -5,7 +5,7 @@ const winSettingsSchema = {};
   "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "DOTUSDT",
   "XRPUSDT", "ADAUSDT", "AVAXUSDT", "DOGEUSDT",
   "AAPL", "TSLA", "AMZN", "NVDA",
-  "XAUXUSD", "SILVUSD", "PLATINUM", "COPPER",
+  "XAUUSD", "SILVUSD", "PLATINUM", "COPPER",
   "USDJPY", "EURUSD", "AUDUSD", "GBPUSD", "NZDUSD", "USDCHF"
 ].forEach((id) => {
   winSettingsSchema[id] = { type: String, enum: ["win", "lose", null], default: null };
