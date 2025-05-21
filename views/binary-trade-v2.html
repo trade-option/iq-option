@@ -24,6 +24,42 @@
     body {
       font-family: 'Inter', 'Prompt', sans-serif;
     }
+    
+    /* ✅ ป้องกันล้นจอ */
+    #chartContainer {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    input, select {
+      min-width: 0;
+    }
+
+    /* ✅ เพิ่ม class สำหรับ wrap ปุ่มบนมือถือ */
+    .mobile-flex-wrap {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ✅ Responsive สำหรับมือถือ */
+    @media (max-width: 480px) {
+      .bottom-nav i {
+        font-size: 1.2rem;
+      }
+
+      #chartContainer {
+        height: 240px;
+      }
+
+      .text-xl {
+        font-size: 1.1rem;
+      }
+
+      .py-3 {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+      }
+    }
   </style>
 </head>
 <body class="bg-[#0f1521] text-white min-h-screen flex flex-col justify-between">
