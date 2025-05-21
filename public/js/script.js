@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:4000/api/auth";  // ✅ ตรวจสอบให้แน่ใจว่า API URL ถูกต้อง
+const API_URL = "/api";  // ✅ ตรวจสอบให้แน่ใจว่า API URL ถูกต้อง
 // ✅ ล้าง token ที่หมดอายุออกจาก localStorage
 const token = localStorage.getItem("token");
 if (token) {
