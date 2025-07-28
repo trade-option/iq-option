@@ -101,9 +101,10 @@ router.get("/orders", authenticate, async (req, res) => {
     const userId = req.user.id;
     const now = new Date();
 
+    const user = await User.findById(userId); // ✅ ดึง user แทน
     const wallet = await Wallet.findOne({ userId });
     const trades = await Trade.find({ userId }).sort({ createdAt: -1 });
-    const winAssets = wallet.winSettings || {};
+    const winAssets = user.winSettings || {};
 
     for (let trade of trades) {
       if (trade.status === "open" && trade.expireAt <= now) {
@@ -114,7 +115,7 @@ router.get("/orders", authenticate, async (req, res) => {
         const realPrice = await getCurrentPrice(trade.asset);
         if (!realPrice) continue;
 
-        const assetKey = trade.asset.toUpperCase(); // ✅ ใช้ชื่อเต็ม เช่น "BTCUSDT"
+        const assetKey = trade.asset.toUpperCase();
         const forceWin = winAssets[assetKey] === "win";
         const forceLose = winAssets[assetKey] === "lose";
 
