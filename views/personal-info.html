@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif !important;
+    }
+  </style>
+    <title>ข้อมูลส่วนตัว</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen pt-6 px-4 sm:px-6">
+
+    <!-- 🔙 ปุ่มย้อนกลับเป็นไอคอนลูกศร -->
+    <div class="absolute top-4 left-4">
+        <button onclick="window.history.back()" class="text-white text-2xl">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
+
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md text-center">
+        <h2 class="text-2xl font-bold mb-4">ข้อมูลส่วนตัว</h2>
+
+        <div class="text-left space-y-3">
+            <div class="flex items-center">
+                <i class="fas fa-id-card text-blue-400 mr-2"></i>
+                <span class="font-semibold">ไอดีผู้ใช้:</span> <span class="ml-auto text-gray-300" id="uid">กำลังโหลด...</span>
+            </div>
+
+            <div class="flex items-center">
+                <i class="fas fa-envelope text-green-400 mr-2"></i>
+                <span class="font-semibold">อีเมล:</span> <span class="ml-auto text-gray-300" id="email">กำลังโหลด...</span>
+            </div>
+
+            <div class="flex items-center">
+                <i class="fas fa-wallet text-yellow-400 mr-2"></i>
+                <span class="font-semibold">ยอดคงเหลือ:</span> 
+                <span class="ml-auto text-gray-300" id="balance">0.00</span> USDT
+            </div>
+
+            <div class="flex items-center">
+                <i class="fas fa-coins text-orange-400 mr-2"></i>
+                <span class="font-semibold">ยอดสะสมฝาก:</span> 
+                <span class="ml-auto text-gray-300" id="totalDeposits">0.00</span> USDT
+            </div>
+
+            <div class="flex items-center">
+                <i class="fas fa-hand-holding-usd text-red-400 mr-2"></i>
+                <span class="font-semibold">ถอนทั้งหมด 24h:</span> 
+                <span class="ml-auto text-gray-300" id="totalWithdrawals24h">0.00</span> USDT
+            </div>
+
+            <div class="flex items-center">
+                <i class="fas fa-unlock text-green-400 mr-2"></i>
+                <span class="font-semibold">ถอนสูงสุด 24h:</span> 
+                <span class="ml-auto text-gray-300" id="availableToWithdraw24h">0.00</span> USDT
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "/api";
+        const token = localStorage.getItem("token");
+
+        async function fetchPersonalInfo() {
+            try {
+                // ✅ ดึงข้อมูลผู้ใช้
+                const res = await fetch(`${API_URL}/profile`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                const userData = await res.json();
+                console.log("✅ ข้อมูลผู้ใช้:", userData);
+
+                if (res.ok) {
+                    document.getElementById("uid").textContent = userData.uid || "ไม่พบข้อมูล";
+                    document.getElementById("email").textContent = userData.email || "ไม่พบข้อมูล";
+                }
+
+                // ✅ ดึงข้อมูล Wallet
+                const walletRes = await fetch(`${API_URL}/wallet/info`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                const walletData = await walletRes.json();
+                console.log("✅ ข้อมูล Wallet:", walletData);
+
+                if (walletRes.ok) {
+                    document.getElementById("balance").textContent = walletData.balance.toFixed(2) || "0.00";
+                    document.getElementById("totalDeposits").textContent = walletData.totalDeposits.toFixed(2) || "0.00";
+                    document.getElementById("totalWithdrawals24h").textContent = walletData.totalWithdrawals24h.toFixed(2) || "0.00";
+                    document.getElementById("availableToWithdraw24h").textContent = walletData.availableToWithdraw24h.toFixed(2) || "0.00";
+                }
+            } catch (error) {
+                console.error("❌ เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
+            }
+        }
+
+        fetchPersonalInfo();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif !important;
+    }
+  </style>
+  <title>ถอน USDT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+  <div class="max-w-md mx-auto p-4">
+    <div class="flex items-center mb-4">
+      <button onclick="window.history.back()" class="text-white text-2xl">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 class="text-center flex-grow text-lg font-semibold">ถอน USDT</h1>
+    </div>
+
+    <div class="text-center mb-2">
+      <p class="text-orange-500">UID ผู้ใช้: <span id="user-uid">กำลังโหลด...</span></p>
+    </div>
+
+    <div class="mb-4">
+      <label class="block mb-2">ที่อยู่กระเป๋า</label>
+      <input type="text" id="walletAddress" placeholder="กดค้างเพื่อวาง" class="w-full p-3 bg-gray-700 rounded text-gray-300">
+    </div>
+
+    <div class="mb-4">
+      <label class="block mb-2">เครือข่าย</label>
+      <select id="network" class="w-full p-3 bg-gray-700 rounded text-gray-300">
+        <option value="">เลือกเครือข่าย</option>
+        <option value="ERC-20">Ethereum Mainnet (ERC-20)</option>
+        <option value="BSC">BNB Smart Chain (BSC/BEP-20)</option>
+        <option value="MATIC">Polygon (MATIC)</option>
+      </select>
+    </div>
+
+    <div class="mb-4">
+      <label class="block mb-2">จำนวนเงิน</label>
+      <div class="flex items-center">
+        <input type="number" id="amount" placeholder="ขั้นต่ำ 0.00" class="w-full p-3 bg-gray-700 rounded text-gray-300">
+        <span class="ml-2 text-gray-300">USDT</span>
+        <button class="ml-2 text-yellow-500" onclick="setMaxAmount()">Max</button>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="block mb-2">มีอยู่</label>
+      <p id="available-balance" class="text-yellow-400">กำลังโหลด... USDT</p>
+    </div>
+
+    <div class="flex justify-between items-center mt-8">
+      <div>
+        <p class="text-gray-300">จำนวนที่ได้รับ</p>
+        <p class="text-xl" id="receive-amount">0.00 USDT</p>
+        <p class="text-gray-500">ค่าธรรมเนียมการถอน 0.06%</p>
+      </div>
+      <button id="withdraw-btn" class="bg-yellow-500 text-gray-900 px-6 py-3 rounded opacity-50" disabled>ถอน</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "/api";
+    const token = localStorage.getItem("token");
+    let currentUserId = "";
+
+    async function refreshBalance() {
+      try {
+        const balanceRes = await fetch(`${API_URL}/wallet/balance`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const balanceData = await balanceRes.json();
+        if (balanceRes.ok) {
+          document.getElementById("available-balance").textContent = `${balanceData.balance.toFixed(2)} USDT`;
+        }
+      } catch (err) {
+        console.error("❌ โหลดยอดคงเหลือล้มเหลว:", err);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (!token) {
+        alert("กรุณาเข้าสู่ระบบก่อนทำการถอนเงิน");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const profileRes = await fetch(`${API_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const profileData = await profileRes.json();
+        if (profileRes.ok) {
+          document.getElementById("user-uid").textContent = profileData.uid;
+          currentUserId = profileData._id;
+        }
+
+        await refreshBalance();
+      } catch (err) {
+        console.error("❌ ดึงข้อมูลล้มเหลว:", err);
+      }
+    });
+
+    document.getElementById("amount").addEventListener("input", () => {
+      const amount = parseFloat(document.getElementById("amount").value) || 0;
+      const fee = amount * 0.0006;
+      const finalAmount = amount - fee;
+      document.getElementById("receive-amount").textContent = `${finalAmount.toFixed(2)} USDT`;
+
+      const available = parseFloat(document.getElementById("available-balance").textContent) || 0;
+      const btn = document.getElementById("withdraw-btn");
+      btn.disabled = amount <= 0 || amount > available;
+      btn.classList.toggle("opacity-50", btn.disabled);
+    });
+
+    function setMaxAmount() {
+      const available = parseFloat(document.getElementById("available-balance").textContent) || 0;
+      document.getElementById("amount").value = available;
+      document.getElementById("amount").dispatchEvent(new Event("input"));
+    }
+
+    document.getElementById("withdraw-btn").addEventListener("click", async () => {
+      const walletAddress = document.getElementById("walletAddress").value.trim();
+      const network = document.getElementById("network").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (!walletAddress || !network || amount <= 0) {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+        return;
+      }
+
+      try {
+        alert("กำลังถอน");
+
+        const res = await fetch(`${API_URL}/withdraw/request`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            walletAddress,
+            network,
+            amount,
+            userId: currentUserId
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("✅ คำขอถอนถูกส่งแล้ว กรุณารอการอนุมัติ");
+
+          // ✅ โหลดยอดเงินใหม่หลังถอน
+          await refreshBalance();
+
+          document.getElementById("walletAddress").value = "";
+          document.getElementById("network").value = "";
+          document.getElementById("amount").value = "";
+          document.getElementById("receive-amount").textContent = "0.00 USDT";
+          document.getElementById("withdraw-btn").disabled = true;
+        } else {
+          alert("❌ ไม่สามารถถอนเงินได้: " + data.message);
+        }
+      } catch (err) {
+        console.error("❌ ถอนล้มเหลว:", err);
+        alert("เกิดข้อผิดพลาดในการถอนเงิน");
+      }
+    });
+  </script>
+</body>
+</html>

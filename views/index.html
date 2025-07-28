@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif !important;
+    }
+  </style>
+    <title>เข้าสู่ระบบ - IQ Option</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #111629;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background-color: #1b203d;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .logo {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background-color: #22273a;
+            color: #fff;
+            font-size: 16px;
+        }
+        button {
+            width: 95%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #FF9800;
+            color: #fff;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #e68900;
+        }
+        p a {
+            color: #FF9800;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        p a:hover {
+            text-decoration: underline;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://www.tradingpedia.com/wp-content/uploads/2020/06/iq-options-logo.png" alt="IQ Option Logo" class="logo">
+    
+    <div class="container">
+        <h1>ยินดีต้อนรับสู่ IQ Option</h1>
+
+        <!-- ✅ แบบฟอร์มสมัครสมาชิก -->
+        <div id="registerForm">
+            <h3>สมัครสมาชิก</h3>
+            <input type="email" id="regEmail" placeholder="อีเมล">
+            <input type="password" id="regPassword" placeholder="รหัสผ่าน">
+            <button onclick="register()">สมัครสมาชิก</button>
+            <p id="registerMessage"></p>
+            <p>มีบัญชีอยู่แล้ว? <a href="#" onclick="showLoginForm()">เข้าสู่ระบบ</a></p>
+        </div>
+
+        <!-- ✅ แบบฟอร์มเข้าสู่ระบบ -->
+        <div id="loginForm" class="hidden">
+            <h3>เข้าสู่ระบบ</h3>
+            <input type="email" id="loginEmail" placeholder="อีเมล">
+            <input type="password" id="loginPassword" placeholder="รหัสผ่าน">
+            <button onclick="login()">เข้าสู่ระบบ</button>
+            <p id="loginMessage"></p>
+            <p>ยังไม่มีบัญชี? <a href="#" onclick="showRegisterForm()">สมัครสมาชิก</a></p>
+        </div>
+    </div>
+    <script>
+    const API_URL = "/api/auth";
+        function showLoginForm() {
+            document.getElementById("registerForm").classList.add("hidden");
+            document.getElementById("loginForm").classList.remove("hidden");
+        }
+      
+        function showRegisterForm() {
+            document.getElementById("loginForm").classList.add("hidden");
+            document.getElementById("registerForm").classList.remove("hidden");
+        }
+      
+        async function register() {
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
+            const messageEl = document.getElementById("registerMessage");
+      
+            if (!email || !password) {
+                messageEl.innerHTML = "<span style='color: red;'>กรุณากรอกข้อมูลให้ครบ</span>";
+                return;
+            }
+      
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+      
+                if (response.ok) {
+                    messageEl.innerHTML = "<span style='color: green;'>สมัครสมาชิกสำเร็จ! กำลังไปหน้าล็อกอิน...</span>";
+                    setTimeout(() => showLoginForm(), 2000);
+                } else {
+                    messageEl.innerHTML = `<span style='color: red;'>${data.message}</span>`;
+                }
+            } catch (error) {
+                messageEl.innerHTML = "<span style='color: red;'>เกิดข้อผิดพลาด</span>";
+            }
+        }
+      
+        async function login() {
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            const messageEl = document.getElementById("loginMessage");
+      
+            if (!email || !password) {
+                messageEl.innerHTML = "<span style='color: red;'>กรุณากรอกข้อมูลให้ครบ</span>";
+                return;
+            }
+      
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+      
+                const data = await response.json();
+      
+                if (response.ok) {
+                    localStorage.setItem("token", data.token);
+      
+                    const decoded = jwt_decode(data.token); // 👈 decode JWT เพื่ออ่าน isAdmin
+                    const isAdmin = decoded.isAdmin;
+      
+                    messageEl.innerHTML = "<span style='color: green;'>เข้าสู่ระบบสำเร็จ!</span>";
+                    setTimeout(() => {
+                        if (isAdmin) {
+                            window.location.href = "/admin-dashboard";
+                        } else {
+                            window.location.href = "/wallet";
+                        }
+                    }, 1000);
+                } else {
+                    messageEl.innerHTML = `<span style='color: red;'>${data.message}</span>`;
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                messageEl.innerHTML = "<span style='color: red;'>เกิดข้อผิดพลาด</span>";
+            }
+        }
+      </script>       
+</body>
+</html>

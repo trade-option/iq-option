@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ฝาก USDT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: #111629;
+    }
+  </style>
+
+  <script>
+    function copyToClipboard() {
+      const walletAddress = document.getElementById("wallet-address");
+      navigator.clipboard.writeText(walletAddress.innerText)
+        .then(() => alert("คัดลอกที่อยู่กระเป๋าสำเร็จ!"))
+        .catch(err => console.error("Error copying text: ", err));
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen pt-6 px-4 sm:px-6">
+  <div class="w-full max-w-md">
+    <!-- 🔹 ปุ่มย้อนกลับ -->
+    <div class="flex items-center mb-4">
+      <i class="fas fa-arrow-left text-white text-2xl cursor-pointer" onclick="goBack()"></i>
+      <h1 class="text-center flex-grow text-white text-xl font-medium">ฝาก USDT</h1>
+    </div>
+
+    <!-- 🧾 QR Code -->
+    <div class="flex justify-center">
+      <img 
+        src="/Untitled-1.jpg" 
+        alt="QR Code" 
+        class="w-48 h-48 rounded-lg border border-gray-700"
+      />
+    </div>
+
+    <!-- 💳 รายละเอียดการฝาก -->
+    <div class="bg-gray-800 p-4 rounded-xl shadow-md space-y-4">
+      <div>
+        <p class="text-gray-400 text-sm">เครือข่าย</p>
+        <p class="font-medium text-white">
+          Tron (TRC20)</p>
+      </div>
+
+      <div>
+        <p class="text-gray-400 text-sm">ที่อยู่กระเป๋าฝากเงิน</p>
+        <div class="flex items-center bg-gray-700 p-3 rounded-lg">
+          <span id="wallet-address" class="text-sm font-medium truncate w-full">
+            TGeiojAWBND6EBJ6sSRoVkBLN2Bhug8bRB
+          </span>
+          <button onclick="copyToClipboard()" class="ml-2 text-white">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

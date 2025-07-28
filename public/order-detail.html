@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>รายละเอียดออเดอร์</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Prompt:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Prompt', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-[#0B1324] min-h-screen flex items-start justify-center p-6">
+  <div class="w-full max-w-md">
+    <header class="flex items-center space-x-3 mb-6">
+      <button onclick="history.back()" class="text-white text-3xl"><i class="fas fa-arrow-left"></i></button>
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 rounded-full bg-[#0B1324] flex items-center justify-center">
+          <img id="logo" class="w-10 h-10 rounded-full" />
+        </div>
+        <div>
+          <h1 class="text-white text-xl font-semibold leading-none" id="assetName">สินทรัพย์</h1>
+          <p class="text-gray-500 text-sm -mt-1">ไบนารี</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="bg-[#15202B] rounded-2xl p-6 text-gray-400">
+      <div class="flex justify-between mb-4">
+        <div>
+          <p class="text-sm mb-1">การลงทุน</p>
+          <p class="text-white text-2xl font-semibold" id="amount">$0.00</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm mb-1">รีเทิร์น</p>
+          <p class="text-2xl font-semibold" id="profit">$0.00 <span class="text-lg font-semibold" id="percent">+0%</span></p>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <p class="text-sm mb-1">ประเภทสถานะ</p>
+        <p class="text-white text-lg font-semibold flex items-center space-x-1" id="direction">
+          <span>ไม่ทราบ</span>
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-y-4 text-base">
+        <div><p class="mb-1 text-sm">เวลาเปิด</p><p id="openedAt">-</p></div>
+        <div><p class="mb-1 text-sm">ราคาเปิด</p><p id="entryPrice">-</p></div>
+        <div><p class="mb-1 text-sm">เวลาหมดอายุ</p><p id="expireAt">-</p></div>
+        <div><p class="mb-1 text-sm">ราคาปิด</p><p id="exitPrice">-</p></div>
+        <div><p class="mb-1 text-sm">เวลาปิด</p><p id="closedAt">-</p></div>
+        <div><p class="mb-1 text-sm">วิธีการปิด</p><p>หมดอายุแล้ว</p></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get("orderId");
+    const token = localStorage.getItem("token");
+
+    if (!token || !orderId) {
+      alert("กรุณาเข้าสู่ระบบหรือไม่พบออเดอร์");
+      location.href = "/login.html";
+    }
+
+    fetch(`/api/trade/order/${orderId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(async res => {
+        if (!res.ok) throw new Error("ไม่พบข้อมูลออเดอร์");
+        return await res.json();
+      })
+      .then(order => {
+        if (!order || !order.asset) throw new Error("ข้อมูลออเดอร์ไม่ถูกต้อง");
+
+        const percent = { 2: 6, 5: 9, 15: 11, 30: 14, 60: 17 }[order.timeframe] || 0;
+        const logo = getLogo(order.asset);
+
+        document.getElementById("logo").src = logo;
+        document.getElementById("assetName").textContent = order.asset.replace("USDT", "/USDT");
+        document.getElementById("amount").textContent = `$${order.amount.toLocaleString()}`;
+        document.getElementById("percent").textContent = `+${percent}%`;
+
+        const profitEl = document.getElementById("profit");
+        profitEl.textContent = `${order.profit >= 0 ? "+" : "-"}$${Math.abs(order.profit).toFixed(2)} `;
+        profitEl.className = `text-2xl font-semibold ${order.profit >= 0 ? "text-green-500" : "text-red-500"}`;
+
+        document.getElementById("direction").innerHTML = order.direction === "buy"
+          ? `<span>ขึ้น</span><svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+          : `<span>ลง</span><svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+        document.getElementById("entryPrice").textContent = order.entryPrice?.toFixed(4) || "-";
+        document.getElementById("exitPrice").textContent = order.exitPrice?.toFixed(4) || "-";
+        document.getElementById("openedAt").textContent = new Date(order.createdAt).toLocaleString("th-TH");
+        document.getElementById("expireAt").textContent = new Date(order.expireAt).toLocaleString("th-TH");
+        document.getElementById("closedAt").textContent = new Date(order.closedAt).toLocaleString("th-TH");
+      })
+      .catch(err => {
+        console.error("โหลดข้อมูลออเดอร์ผิดพลาด", err);
+        alert("ไม่พบข้อมูลออเดอร์หรือโหลดล้มเหลว");
+      });
+  </script>
+</body>
+</html>

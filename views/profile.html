@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Prompt', sans-serif !important;
+      }
+    </style>    
+    <title>Personal Data Room</title>
+    <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="flex flex-col items-center p-6">
+        <div class="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-user text-4xl text-gray-400"></i>
+        </div>
+        <div class="text-center mb-4">
+            <p class="text-orange-500">
+                ไอดีผู้ใช้ <span id="user-id"># กำลังโหลด...</span> 
+                <i class="fas fa-copy cursor-pointer" onclick="copyUserId()"></i>
+            </p>
+        </div>
+        <div class="flex space-x-4 mb-6">
+            <button class="bg-gray-700 text-white py-2 px-6 rounded" onclick="window.location.href='/withdraw'">ถอนเงิน</button>
+            <button class="bg-orange-500 text-white py-2 px-6 rounded" onclick="window.location.href='/deposit'">ฝากเงิน</button>
+        </div>
+        <div class="w-full max-w-md">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-envelope text-green-500 mr-2"></i>
+                <p class="flex-1">อีเมล</p>
+                <p class="text-gray-400" id="email">กำลังโหลด...</p>
+            </div>
+
+            <div class="flex items-center mb-4">
+                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                <p class="flex-1">การยืนยัน</p>
+                <p class="text-gray-400 cursor-pointer" id="kyc-status" onclick="redirectToKYC()">กำลังโหลด...</p>
+            </div>
+
+            <div class="border-t border-gray-700 mt-4 pt-4">
+                <div class="flex items-center mb-4 cursor-pointer" onclick="window.location.href='/personal-info'">
+                    <i class="fas fa-user text-gray-400 mr-2"></i>
+                    <p class="flex-1">ข้อมูลส่วนตัว</p>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+                <!-- ✅ ติดต่อเจ้าหน้าที่ -->
+                <div class="flex items-center mb-4 cursor-pointer" onclick="contactSupport()">
+                    <i class="fas fa-comments text-gray-400 mr-2"></i>
+                    <span>ติดต่อเจ้าหน้าที่</span>
+                    <i class="fas fa-chevron-right ml-auto"></i>
+                </div>
+                <div class="flex items-center mb-4 cursor-pointer" onclick="window.location.href='/transaction-history'">
+                    <i class="fas fa-history text-gray-400 mr-2"></i>
+                    <p class="flex-1">ประวัติยอดคงเหลือ</p>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+                <div class="flex items-center mb-4 cursor-pointer" onclick="logout()">
+                    <i class="fas fa-sign-out-alt text-gray-400 mr-2"></i>
+                    <p class="flex-1">ออกจากระบบ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ แก้เฉพาะบางส่วนเท่านั้น ที่เหลือคงเดิมทุกอย่าง -->
+    <script>
+        document.addEventListener("DOMContentLoaded", updateProfile);
+      
+        async function updateProfile() {
+          const token = localStorage.getItem("token");
+      
+          if (!token) {
+            alert(" กรุณาเข้าสู่ระบบก่อน!");
+            window.location.href = "index.html";
+            return;
+          }
+      
+          try {
+            const response = await fetch("/api/profile", {
+              method: "GET",
+              headers: { Authorization: `Bearer ${token}` }
+            });
+      
+            if (!response.ok) throw new Error("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+      
+            const data = await response.json();
+      
+            // ✅ แสดงข้อมูลผู้ใช้
+            document.getElementById("user-id").innerText = `#${data.uid || "ไม่พบข้อมูล"}`;
+            document.getElementById("email").innerText = data.email || "ไม่พบข้อมูล";
+      
+            // ✅ เก็บ uid สำหรับใช้ในระบบแชท
+            if (data.uid) {
+              localStorage.setItem("userID", data.uid);
+            }
+      
+            // ✅ แสดงสถานะการยืนยันตัวตน (KYC)
+            const kycStatusElement = document.getElementById("kyc-status");
+      
+            if (data.kycStatus === "verified") {
+              kycStatusElement.innerText = "ยืนยันแล้ว";
+              kycStatusElement.style.pointerEvents = "none";
+              kycStatusElement.style.color = "green";
+            } else {
+              kycStatusElement.innerText = "ยืนยันตอนนี้";
+              kycStatusElement.style.color = "orange";
+              kycStatusElement.style.cursor = "pointer";
+            }
+      
+          } catch (error) {
+            console.error(" Error loading profile:", error);
+            document.getElementById("user-id").innerText = "โหลดข้อมูลผิดพลาด";
+            document.getElementById("kyc-status").innerText = "โหลดข้อมูลผิดพลาด";
+          }
+        }
+      
+        function redirectToKYC() {
+          const kycStatus = document.getElementById("kyc-status").innerText;
+          if (kycStatus.includes("ยืนยันตอนนี้")) {
+            window.location.href = "/kyc";
+          }
+        }
+      
+        function copyUserId() {
+          const userId = document.getElementById("user-id").innerText;
+          navigator.clipboard.writeText(userId.replace("#", "").trim());
+          alert("คัดลอกไอดีผู้ใช้แล้ว: " + userId);
+        }
+      
+        function logout() {
+          localStorage.removeItem("token");
+          localStorage.removeItem("userID");
+          window.location.href = "index.html";
+        }
+      
+        // ✅ เปิดหน้าระบบแชทพร้อมส่ง roomID
+        function contactSupport() {
+          const userID = localStorage.getItem("userID");
+      
+          if (!userID) {
+            alert("❌ กรุณาล็อกอินก่อนติดต่อเจ้าหน้าที่");
+            window.location.href = "/login";
+          } else {
+            window.location.href = `https://chat-backend-8o9h.onrender.com/chat?roomID=${userID}`;
+          }
+        }
+      </script>      
+ <div class="fixed bottom-0 left-0 w-full bg-gray-900 border-t border-gray-700 flex justify-between px-8 py-3 text-white text-xl z-50">
+    <a href="/binary-trade-v2"><i class="fas fa-chart-line"></i></a>
+    <a href="/wallet"><i class="fas fa-wallet"></i></a>
+    <a href="/profile"><i class="fas fa-user text-orange-500"></i></a> <!-- แสดง active สีส้ม -->
+  </div>   
+</body>
+</html>

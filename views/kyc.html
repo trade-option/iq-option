@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ยืนยันตัวตน (KYC)</title>
+  <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif !important;
+    }
+  </style>
+</head>
+
+<body class="relative bg-gray-900 text-white font-sans min-h-screen flex items-center justify-center">
+    <div class="absolute top-4 left-4">
+        <button onclick="window.history.back()" class="text-white text-2xl">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
+      <div class="w-full max-w-md p-6">
+    <h2 class="text-2xl font-bold text-center mb-6">ยืนยันตัวตนด้วยบัตรประชาชน (KYC)</h2>
+
+    <form id="kycForm" class="space-y-4" enctype="multipart/form-data">
+      <div>
+        <label class="block mb-1">ชื่อ-นามสกุล</label>
+        <input type="text" id="fullName" name="fullName" class="w-full p-3 rounded bg-gray-800 text-white" required />
+      </div>
+
+      <div>
+        <label class="block mb-1">เลขบัตรประชาชน</label>
+        <input type="text" id="idCard" name="idCard" class="w-full p-3 rounded bg-gray-800 text-white" required />
+      </div>
+
+      <div>
+        <label class="block mb-1">อัปโหลดรูปบัตรประชาชน (ด้านหน้า)</label>
+        <input type="file" id="idCardFront" name="idCardFront" accept="image/*" class="w-full p-3 rounded bg-gray-800 text-white" required />
+      </div>
+
+      <div>
+        <label class="block mb-1">อัปโหลดรูปบัตรประชาชน (ด้านหลัง)</label>
+        <input type="file" id="idCardBack" name="idCardBack" accept="image/*" class="w-full p-3 rounded bg-gray-800 text-white" required />
+      </div>
+
+      <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded">ส่งเอกสาร</button>
+    </form>
+  </div>
+
+  <script>
+    const API_URL = "/api";
+    const token = localStorage.getItem("token");
+
+    document.getElementById("kycForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!token) {
+        alert("กรุณาเข้าสู่ระบบก่อน");
+        return;
+      }
+
+      const fullName = document.getElementById("fullName").value.trim();
+      const idCard = document.getElementById("idCard").value.trim();
+      const idCardFront = document.getElementById("idCardFront").files[0];
+      const idCardBack = document.getElementById("idCardBack").files[0];
+
+      if (!fullName || !idCard || !idCardFront || !idCardBack) {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("fullName", fullName);
+      formData.append("idCard", idCard);
+      formData.append("idCardFront", idCardFront);
+      formData.append("idCardBack", idCardBack);
+
+      try {
+        const res = await fetch(`${API_URL}/kyc`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("✅ ส่งเอกสารสำเร็จ! กำลังตรวจสอบ...");
+          document.getElementById("kycForm").reset();
+        } else {
+          alert("❌ ส่งเอกสารไม่สำเร็จ: " + (data.message || "เกิดข้อผิดพลาด"));
+        }
+      } catch (err) {
+        console.error("❌ Error submitting KYC:", err);
+        alert("เกิดข้อผิดพลาดในการส่งเอกสาร");
+      }
+    });
+  </script>
+</body>
+</html>

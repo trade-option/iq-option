@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif !important;
+    }
+  </style>
+  <title>ประวัติยอดคงเหลือ</title>
+  <link rel="icon" href="https://fsms.iqoption.com/storage/public/5f/7a/fa83cf9ba7f8e8f0b7.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+
+<body class="bg-gray-900 text-white font-sans">
+  <div class="max-w-md mx-auto p-4">
+    <!-- 🔙 ปุ่มย้อนกลับ -->
+    <div class="flex items-center mb-4">
+      <button onclick="window.history.back()" class="text-white text-2xl">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 class="text-center flex-grow text-lg font-semibold">ประวัติยอดคงเหลือ</h1>
+    </div>
+
+    <!-- ✅ ยอดคงเหลือปัจจุบัน -->
+    <div class="text-center mb-4">
+      <p class="text-lg">
+        ยอดคงเหลือปัจจุบัน:
+        <span id="current-balance" class="text-yellow-400">กำลังโหลด...</span> USDT
+      </p>
+    </div>
+
+    <!-- ✅ ประวัติการฝาก-ถอน -->
+    <h2 class="text-center font-bold mb-2">ประวัติการฝาก-ถอน</h2>
+    <div id="transaction-history" class="space-y-2">
+      <p class="text-center text-red-400">กำลังโหลดข้อมูล...</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const API_URL = "/api";
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("กรุณาเข้าสู่ระบบก่อนเข้าหน้านี้");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const balanceRes = await fetch(`${API_URL}/wallet/balance`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const balanceData = await balanceRes.json();
+        if (balanceRes.ok) {
+          document.getElementById("current-balance").textContent = balanceData.balance.toFixed(2);
+        } else {
+          document.getElementById("current-balance").textContent = "โหลดข้อมูลผิดพลาด";
+        }
+
+        // ✅ ดึงข้อมูลธุรกรรม (ฝาก/ถอน)
+        const transactionsRes = await fetch(`${API_URL}/transactions/user-history`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const transactionsData = await transactionsRes.json();
+        const historyContainer = document.getElementById("transaction-history");
+
+        if (transactionsRes.ok) {
+          historyContainer.innerHTML = "";
+
+          if (transactionsData.length === 0) {
+            historyContainer.innerHTML = "<p class='text-center text-gray-400'>ยังไม่มีประวัติฝาก-ถอน</p>";
+            return;
+          }
+
+          transactionsData.forEach((tx) => {
+            const txItem = document.createElement("div");
+            txItem.classList.add("p-3", "rounded", "text-sm", "flex", "justify-between", "items-center");
+
+            const formattedDate = new Date(tx.createdAt).toLocaleString("th-TH", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            });
+
+            let colorClass = "text-gray-300";
+            let amountText = `${tx.amount.toFixed(2)} USDT`;
+
+            if (tx.type === "deposit") {
+              colorClass = "text-green-400";
+              amountText = `+${amountText}`;
+            } else if (tx.type === "withdraw") {
+              colorClass = "text-red-400";
+              amountText = `- ${amountText}`;
+            }
+
+            // ✅ แก้ตรงนี้: รองรับหลายค่า status ที่แสดงว่า "สำเร็จ"
+            let statusText = `<span class="text-yellow-400"> รอดำเนินการ</span>`;
+            if (
+              tx.status === "succeed" ||
+              tx.status === "approved" ||
+              tx.status === "success"
+            ) {
+              statusText = `<span class="text-green-400"> สำเร็จ</span>`;
+            } else if (tx.status === "rejected" || tx.status === "failed") {
+              statusText = `<span class="text-red-400"> ถูกปฏิเสธ</span>`;
+            }
+
+            txItem.innerHTML = `
+              <span>USDT</span>
+              <span class="text-xs">${formattedDate}</span>
+              <span class="${colorClass}">${amountText}</span>
+              ${statusText}
+            `;
+
+            historyContainer.appendChild(txItem);
+          });
+        } else {
+          historyContainer.innerHTML = "<p class='text-center text-red-400'>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>";
+        }
+      } catch (error) {
+        console.error("❌ Error fetching transactions:", error);
+        document.getElementById("transaction-history").innerHTML =
+          "<p class='text-center text-red-400'>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>";
+      }
+    });
+  </script>
+</body>
+</html>
