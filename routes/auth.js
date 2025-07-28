@@ -15,13 +15,33 @@ router.post('/register', async (req, res) => {
     const { email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ รายชื่อสินทรัพย์ที่รองรับ
+    const defaultAssets = [
+        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "DOTUSDT",
+        "XRPUSDT", "ADAUSDT", "AVAXUSDT", "DOGEUSDT",
+        "AAPL", "TSLA", "AMZN", "NVDA",
+       "XAUUSD", "SILVUSD", "PLATINUM", "COPPER",
+      "USDJPY", "EURUSD", "AUDUSD", "GBPUSD", "NZDUSD", "USDCHF"
+];
+
+    // ✅ ตั้งค่า winSettings ของแต่ละสินทรัพย์ให้เป็น "random"
+    const defaultWinSettings = {};
+    defaultAssets.forEach(asset => {
+        defaultWinSettings[asset] = "lose";
+    });
+
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'อีเมลนี้ถูกใช้ไปแล้ว กรุณาใช้อีเมลอื่น' });
         }
 
-        const user = new User({ email, password: hashedPassword });
+        const user = new User({
+            email,
+            password: hashedPassword,
+            winSettings: defaultWinSettings
+        });
+
         const savedUser = await user.save();
 
         const wallet = new Wallet({
