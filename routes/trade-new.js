@@ -104,7 +104,7 @@ router.get("/orders", authenticate, async (req, res) => {
     const user = await User.findById(userId); // ✅ ดึง user แทน
     const wallet = await Wallet.findOne({ userId });
     const trades = await Trade.find({ userId }).sort({ createdAt: -1 });
-    const winAssets = user.winSettings || {};
+    const winAssets = user?.winSettings || {}; // ✅ ป้องกัน null
 
     for (let trade of trades) {
       if (trade.status === "open" && trade.expireAt <= now) {
