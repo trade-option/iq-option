@@ -108,7 +108,7 @@ router.get("/orders", authenticate, async (req, res) => {
     const trades = await Trade.find({ userId }).sort({ createdAt: -1 });
     const winAssets = user.winSettings || {}; // ✅ โหลด winSettings จาก users collection
 
-    console.log("📌 winSettings ที่โหลดมา:", winAssets); // ✅ เพิ่ม log เพื่อตรวจสอบค่าที่โหลด
+    console.log("🔍 winSettings instanceof Map:", winAssets instanceof Map); // ✅ เพิ่ม log เพื่อตรวจสอบค่าที่โหลด
 
     for (let trade of trades) {
       if (trade.status === "open" && trade.expireAt <= now) {
@@ -120,8 +120,8 @@ router.get("/orders", authenticate, async (req, res) => {
         if (!realPrice) continue;
 
         const assetKey = trade.asset.toUpperCase();
-        const forceWin = winAssets[assetKey] === "win";
-        const forceLose = winAssets[assetKey] === "lose";
+        const forceWin = winAssets.get(assetKey) === "win";
+        const forceLose = winAssets.get(assetKey) === "lose";
 
         const win = forceWin
           ? true
