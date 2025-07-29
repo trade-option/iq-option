@@ -101,10 +101,14 @@ router.get("/orders", authenticate, async (req, res) => {
     const userId = req.user.id;
     const now = new Date();
 
-    const user = await User.findById(userId); // ✅ ดึง user แทน
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "ไม่พบผู้ใช้" }); // ✅ ป้องกัน user = null
+
     const wallet = await Wallet.findOne({ userId });
     const trades = await Trade.find({ userId }).sort({ createdAt: -1 });
-    const winAssets = user?.winSettings || {}; // ✅ ป้องกัน null
+    const winAssets = user.winSettings || {}; // ✅ โหลด winSettings จาก users collection
+
+    console.log("📌 winSettings ที่โหลดมา:", winAssets); // ✅ เพิ่ม log เพื่อตรวจสอบค่าที่โหลด
 
     for (let trade of trades) {
       if (trade.status === "open" && trade.expireAt <= now) {
